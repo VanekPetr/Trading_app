@@ -54,6 +54,11 @@ class TradeBot:
 
         weekly_returns.columns = tickers
 
+    #def f(self, logger=None):
+    #    logger = logger or logging.getLogger(__name__)
+    #    logger.info("Hello World")
+        
+        
     @staticmethod
     def __plot_backtest(
         performance: pd.DataFrame,
