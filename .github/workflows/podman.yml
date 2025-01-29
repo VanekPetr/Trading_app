@@ -1,0 +1,49 @@
+name: Build Container Image
+
+on:
+  push:
+  #push:
+  #  branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        run: |
+          podman login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image
+        run: |
+          ls -all
+          pwd
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          podman build \
+            --tag ghcr.io/$REPO:${{ github.sha }} \
+            --tag ghcr.io/$REPO:latest \
+            -f docker/Dockerfile \
+            .
+
+      #- name: Test container image
+      #  run: |
+      #    podman run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} test
+
+      - name: Push container image
+        if: github.event_name != 'pull_request'
+        run: |
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          podman push ghcr.io/$REPO:${{ github.sha }}
+          podman push ghcr.io/$REPO:latest
